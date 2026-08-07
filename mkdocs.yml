@@ -1,5 +1,5 @@
-site_name: NameMCSniper Documentation
-site_description: A powerful CLI Minecraft username sniper with proxy support and Discord notifications
+﻿site_name: NameMCSniper Documentation
+site_description: Safe-by-default CLI documentation for NameMCSniper v3.0.0
 site_author: light & zwroe
 site_url: https://zwroee.github.io/NameMCSniper-Docs
 
@@ -59,8 +59,8 @@ markdown_extensions:
   - pymdownx.tabbed:
       alternate_style: true
   - pymdownx.emoji:
-      emoji_index: !!python/name:materialx.emoji.twemoji
-      emoji_generator: !!python/name:materialx.emoji.to_svg
+      emoji_index: !!python/name:material.extensions.emoji.twemoji
+      emoji_generator: !!python/name:material.extensions.emoji.to_svg
   - admonition
   - pymdownx.details
   - attr_list

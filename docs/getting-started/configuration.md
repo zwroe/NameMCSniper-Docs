@@ -1,160 +1,146 @@
-# Configuration
+﻿# Configuration
 
-Configure NameMC Sniper for optimal performance with the `config.yaml` file.
+NameMCSniper v3.0.0 uses `config.yaml` for normal settings and optional sibling files for sensitive lists.
 
-## :wrench: Configuration File Structure
+## Files
 
-The configuration file is organized into several sections:
+| File | Purpose | Commit? |
+|------|---------|---------|
+| `config.yaml` | Local runtime configuration | No |
+| `tokens.txt` | One Minecraft bearer token per line | No |
+| `proxies.txt` | One HTTP(S) proxy per line | No |
+| `config.yaml.example` | Shareable example config | Yes |
+
+Create the default local config:
+
+```bash
+python Main.py config-create
+```
+
+## Current Config Shape
 
 ```yaml
-debug_mode: true
-discord:
-  embed_color: 65280
-  enabled: true
-  mention_role_id: 'mention_role_id'
-  webhook_url: 'Discord_webhook_url'
-log_level: INFO
-notifications:
-  intervals:
-  - 86400
-  - 43200
-  - 21600
-  - 7200
-  - 3600
-  - 1800
-  - 300
-  - 60
-  - 30
-proxy:
-  enabled: true
-  max_retries: 3
-  proxies:
-  - "http://username:password@proxy1.example.com:8080"
-  - "http://username:password@proxy2.example.com:8080"
+snipe:
+  target_username: "TestName"
+  bearer_token: ""
+  bearer_tokens: []
+  timezone_name: "America/New_York"
+  dry_run: true
+  dry_run_scenario: "taken_then_success"
+  dry_run_success_after: 3
+  api_base_url: "https://api.minecraftservices.com"
+  start_sniping_at_seconds: 0.4
+  snipe_window_seconds: 10.1
+  max_snipe_attempts: 3000
+  request_delay_ms: 8
+  concurrent_requests: 40
+  max_backoff_seconds: 5
+  adaptive_delays: true
+  per_token_rate_limiting: true
 
+proxy:
+  enabled: false
+  proxies: []
   rotation_enabled: true
   timeout: 10
-snipe:
-  bearer_token: 'bearer_token_here'
-  concurrent_requests: 10
-  max_snipe_attempts: 100
-  request_delay_ms: 25
-  start_sniping_at_seconds: 30
+  max_retries: 3
 
-  target_username: 'target_username_here'
-```
+discord:
+  enabled: false
+  webhook_url: ""
+  mention_role_id: ""
+  embed_color: 65280
 
-## :gear: Configuration Sections
-
-### Proxy Settings
-
-Configure proxy rotation for improved performance and reliability:
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| `enabled` | boolean | Enable/disable proxy usage |
-| `proxies` | list | List of proxy URLs |
-| `rotation_enabled` | boolean | Enable proxy rotation |
-| `timeout` | integer | Proxy timeout in seconds |
-| `max_retries` | integer | Maximum retry attempts per proxy |
-
-!!! example "Proxy Formats"
-    - `http://ip:port`
-    - `http://username:password@ip:port`
-    - `https://ip:port`
-    - `socks5://ip:port`
-
-### Discord Integration
-
-Set up Discord notifications for real-time updates:
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| `enabled` | boolean | Enable Discord notifications |
-| `webhook_url` | string | Discord webhook URL (recommended) |
-| `mention_role_id` | string | Role ID to mention (optional) |
-| `embed_color` | integer | Embed color (decimal format) |
-
-### Snipe Settings
-
-Core sniping configuration:
-
-| Setting | Type | Description |
-|---------|------|-------------|
-| `target_username` | string | Username to snipe |
-| `bearer_token` | string | Minecraft bearer token |
-| `start_sniping_at_seconds` | integer | Seconds before drop to start |
-| `max_snipe_attempts` | integer | Maximum snipe attempts |
-| `request_delay_ms` | integer | Delay between requests (ms) |
-| `concurrent_requests` | integer | Number of concurrent requests |
-| `use_multiple_threads` | boolean | Enable multi-threading |
-
-### Notification Intervals
-
-Customize when to receive countdown notifications:
-
-```yaml
 notifications:
   intervals:
-    - 86400  # 24 hours before drop
-    - 43200  # 12 hours before drop
-    - 21600  # 6 hours before drop
-    - 7200   # 2 hours before drop
-    - 3600   # 1 hour before drop
-    - 1800   # 30 minutes before drop
-    - 300    # 5 minutes before drop
-    - 60     # 1 minute before drop
-    - 30     # 30 seconds before drop
+    - 3600
+    - 1800
+    - 300
+    - 60
+    - 30
+    - 10
+    - 5
+    - 1
+
+performance:
+  gc_disable: true
+  high_priority: true
+  pre_warm_connections: true
+  busy_wait_ms: 50
+
+debug_mode: false
+log_level: "INFO"
 ```
 
-## :bulb: Configuration Tips
+## Snipe Settings
 
-### Performance Optimization
+| Setting | Description |
+|---------|-------------|
+| `target_username` | Username used by default commands and easy mode |
+| `bearer_token` | Primary token, usually kept empty if using `tokens.txt` |
+| `bearer_tokens` | Additional YAML tokens; `tokens.txt` is preferred for secrets |
+| `timezone_name` | Timezone for copied NameMC timestamps, such as `America/New_York`, `UTC`, or `-04:00` |
+| `dry_run` | Safe mode switch; defaults to `true` |
+| `dry_run_scenario` | Simulation outcome: `success`, `taken`, `taken_then_success`, `rate_limited_then_success`, `auth_error`, `server_error`, or `timeout` |
+| `start_sniping_at_seconds` | Lead time before the drop window starts |
+| `snipe_window_seconds` | Claim attempt window length |
+| `max_snipe_attempts` | Global attempt budget shared by all workers |
+| `request_delay_ms` | Per-worker pacing delay |
+| `concurrent_requests` | Number of concurrent workers |
+| `adaptive_delays` | Back off based on rate-limit responses |
+| `per_token_rate_limiting` | Track rate limits separately per token |
 
-**High-Speed Setup**:
-```yaml
-snipe:
-  request_delay_ms: 10      # Lower delay = faster requests
-  concurrent_requests: 20   # More concurrent requests
-  use_multiple_threads: true
+## Tokens File
+
+Create `tokens.txt` beside `config.yaml`:
+
+```text
+# One token per line. Blank lines and comments are ignored.
+first-account-token
+second-account-token
+third-account-token
 ```
 
-**Conservative Setup**:
-```yaml
-snipe:
-  request_delay_ms: 50      # Higher delay = less aggressive
-  concurrent_requests: 5    # Fewer concurrent requests
-  use_multiple_threads: false
+Tokens from `tokens.txt` are merged with YAML tokens, duplicates are removed, and file-only tokens are not copied into YAML when configuration is saved.
+
+## Proxy Settings
+
+| Setting | Description |
+|---------|-------------|
+| `enabled` | Enables proxy use for advanced commands |
+| `proxies` | YAML proxy list; `proxies.txt` is preferred |
+| `rotation_enabled` | Enables round-robin proxy selection |
+| `timeout` | Proxy request timeout in seconds |
+| `max_retries` | Failures before a proxy is disabled |
+
+Supported proxy formats:
+
+```text
+http://host:port
+http://username:password@host:port
+https://host:port
+https://username:password@host:port
 ```
 
-### Proxy Recommendations
+SOCKS proxies are rejected by the current aiohttp transport.
 
-- Use **high-quality residential proxies** for best results
-- Test proxies regularly with `python Main.py test-proxies`
-- Rotate proxies to avoid rate limiting
-- Use proxies close to Minecraft servers geographically
+## Discord Settings
 
-## :warning: Important Notes
+Discord support is webhook-only.
 
-!!! warning "Bearer Token Security"
-    Never share your bearer token or commit it to version control. Consider using environment variables:
-    
-    ```yaml
-    snipe:
-      bearer_token: "${MINECRAFT_BEARER_TOKEN}"
-    ```
+| Setting | Description |
+|---------|-------------|
+| `enabled` | Enables webhook notifications for non-dry-run flows |
+| `webhook_url` | HTTPS Discord webhook URL |
+| `mention_role_id` | Optional numeric role ID |
+| `embed_color` | Decimal embed color |
 
-!!! info "Rate Limiting"
-    Be careful with aggressive settings. Too many requests too quickly may result in rate limiting or IP bans.
+Easy mode disables Discord and proxies intentionally so they stay out of the critical path.
 
-## :white_check_mark: Validation
-
-Always validate your configuration after making changes:
+## Validate Configuration
 
 ```bash
 python Main.py config-validate
 ```
 
-## :arrow_right: Next Steps
-
-Once configured, learn how to get your bearer token in the [Authentication](authentication.md) guide.
+Safe dry runs can validate without a token. Live scheduled claims require at least one valid-looking token and an explicit timezone.

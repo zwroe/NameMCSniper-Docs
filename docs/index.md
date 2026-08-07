@@ -1,78 +1,88 @@
-# NameMC Sniper
+﻿# NameMCSniper
 
-A powerful CLI Minecraft username sniper that uses the NameMC API with proxy support and Discord notifications. Features automated monitoring, scheduled notifications, and high-speed sniping with bearer token authentication.
+![NameMCSniper banner](namemcsniperbanner.png)
 
-![NameMC Sniper](https://img.shields.io/badge/NameMC-Sniper-green?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.8+-blue?style=for-the-badge&logo=python)
+NameMCSniper is a safe-by-default Python CLI for simulating timed Minecraft username claim workflows and, only when deliberately unlocked, issuing live username-change requests.
+
+The current documented release is **v3.0.0**. The default mode is local simulation: it does not contact Minecraft, Discord, proxies, NTP, or internet time services, and it cannot change an account.
+
+![NameMCSniper](https://img.shields.io/badge/NameMCSniper-green?style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)
 ![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
 
-## :rocket: Features
+## Current Highlights
 
-- :lock: **Bearer Token Authentication** - Secure authentication without email/password
-- :globe_with_meridians: **Proxy Support** - Rotate through multiple proxies with health checking
-- :loudspeaker: **Discord Notifications** - Real-time updates via webhook or bot
-- :alarm_clock: **Scheduled Notifications** - Alerts at 24h, 12h, 6h, 2h, 1h, 30m, 5m, 1m, 30s before drop
-- :zap: **High-Speed Sniping** - Concurrent requests with minimal delay
-- :art: **Rich CLI Interface** - Beautiful terminal output with colors and tables
-- :bar_chart: **Comprehensive Logging** - Detailed logs with configurable levels
+- **Safe simulation by default** - Test the worker, timing, rate-limit, and result paths without a Minecraft account or public network calls.
+- **Easy CLI workflow** - Run `python Main.py easy` and answer guided prompts.
+- **Explicit live safety lock** - Live claims require `--live` and a separate acknowledgement environment variable.
+- **Scheduled NameMC timing** - Use copied NameMC drop times with explicit timezones.
+- **Multiple account support** - Load one bearer token per line from `tokens.txt`.
+- **Proxy file support** - Load HTTP(S) proxies from `proxies.txt` when proxy mode is enabled.
+- **Discord webhooks** - Optional webhook notifications outside the precision timing path.
+- **Local integration testing** - Fake Minecraft API support keeps verification offline and repeatable.
 
-## :package: Download
+## Quick Start
 
-**Get NameMC Sniper:** [Download from GitHub](https://github.com/zwroee/NameMCSniper)
+```bash
+git clone https://github.com/zwroee/NameMCSniper.git
+cd NameMCSniper
+python -m venv .venv
+```
 
-## :fast_forward: Quick Start
+Windows:
 
-1. **Download NameMC Sniper**
-   ```bash
-   git clone https://github.com/zwroee/NameMCSniper.git
-   cd NameMCSniper
-   ```
+```powershell
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
+.\.venv\Scripts\python.exe Main.py config-create
+.\.venv\Scripts\python.exe Main.py easy
+```
 
-2. **Install Dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+Linux/macOS:
 
-3. **Launch Interactive CLI Menu**
-   ```bash
-   python menu.py
-   ```
+```bash
+.venv/bin/python -m pip install -r requirements.txt
+.venv/bin/python Main.py config-create
+.venv/bin/python Main.py easy
+```
 
-4. **Follow the Menu Options**
-   - Select `[11] Create Config` to set up your configuration
-   - Select `[12] Validate Config` to verify your settings
-   - Select `[1] Start Sniper` to begin sniping
+## Common Commands
 
-!!! tip "Why Use the Interactive Menu?"
-    The CLI menu provides a beautiful Matrix-style interface with easy navigation, real-time testing, and no need to remember complex commands!
+| Command | Purpose |
+|---------|---------|
+| `python Main.py easy` | Guided simulation or live run |
+| `python Main.py simulate` | Immediate offline simulation |
+| `python Main.py snipe-at -u "TargetName" -w "9/15/2026 â€¢ 6:06:50 PM" --timezone America/New_York` | Scheduled dry run |
+| `python Main.py config-validate` | Validate configuration |
+| `python Main.py check-accounts` | Validate configured bearer tokens |
+| `python Main.py check-proxies` | Validate configured proxies |
+| `python Main.py benchmark` | Measure local timing precision |
 
-## :books: Documentation Sections
+## Documentation Sections
 
 ### Getting Started
-- [Installation](getting-started/installation.md) - Set up NameMC Sniper on your system
-- [Configuration](getting-started/configuration.md) - Configure the sniper for optimal performance
-- [Authentication](getting-started/authentication.md) - Get your Minecraft bearer token
+
+- [Installation](getting-started/installation.md) - Set up the project and Python environment
+- [Configuration](getting-started/configuration.md) - Understand `config.yaml`, `tokens.txt`, and `proxies.txt`
+- [Authentication](getting-started/authentication.md) - Store bearer tokens safely
 
 ### Usage
-- [Basic Usage](usage/basic-usage.md) - Learn the essential commands
-- [Command Reference](usage/commands.md) - Complete command documentation
-- [Discord Setup](usage/discord-setup.md) - Configure Discord notifications
-- [Proxy Setup](usage/proxy-setup.md) - Set up proxy rotation
+
+- [Basic Usage](usage/basic-usage.md) - Run simulations, easy mode, and scheduled dry runs
+- [Command Reference](usage/commands.md) - Current v3.0.0 command list
+- [Discord Setup](usage/discord-setup.md) - Configure optional webhook notifications
+- [Proxy Setup](usage/proxy-setup.md) - Configure HTTP(S) proxy loading and checks
 
 ### Advanced
-- [How It Works](advanced/how-it-works.md) - Understanding the sniping process
-- [Performance Optimization](advanced/performance.md) - Maximize sniping success
-- [Troubleshooting](advanced/troubleshooting.md) - Solve common issues
 
-## :warning: Important Notice
+- [How It Works](advanced/how-it-works.md) - Safety model, scheduling, and claim flow
+- [Performance Optimization](advanced/performance.md) - Timing, worker, proxy, and clock notes
+- [Troubleshooting](advanced/troubleshooting.md) - Common setup and runtime issues
 
-!!! warning "Educational Purpose Only"
-    This tool is for educational purposes only. Make sure to comply with Minecraft's Terms of Service and use responsibly.
+## Important Notice
 
-## :handshake: Support
+!!! warning "Use Responsibly"
+    Live functionality can change a real Minecraft account username. Use it only where permitted, respect service limits and account restrictions, and keep tokens, webhooks, and proxies private.
 
-Need help? Join our [Discord Server](https://discord.gg/b4BFqqtTqF) for community support or check out our [Support](legal/support.md) page for more assistance options.
+## Support
 
----
-
-**Ready to get started?** Head over to the [Installation](getting-started/installation.md) guide!
+Need help? Start with the [Troubleshooting](advanced/troubleshooting.md) guide, then use the support channels listed on the [Support](legal/support.md) page.

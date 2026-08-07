@@ -1,123 +1,104 @@
-# Installation
+﻿# Installation
 
-This guide will help you install NameMC Sniper and its dependencies on your system.
+This guide installs the current NameMCSniper v3.0.0 CLI.
 
-## :computer: System Requirements
+## Requirements
 
-- **Python**: 3.8 or higher
-- **Operating System**: Windows, macOS, or Linux
-- **Network**: Stable internet connection
-- **Memory**: At least 512MB RAM available
+- Python **3.10 or newer**
+- Git
+- A terminal: PowerShell on Windows, or a shell on Linux/macOS
+- A correct system clock for live timing
 
-## :package: Installation Steps
+!!! info "No account required for testing"
+    The default mode is safe simulation. You can install, configure, and test the program without a Minecraft account, bearer token, Discord webhook, proxy, VPS, NTP access, or public network calls.
 
-### 1. Clone the Repository
+## Clone the Repository
 
 ```bash
 git clone https://github.com/zwroee/NameMCSniper.git
 cd NameMCSniper
 ```
 
-### 2. Install Python Dependencies
+## Create a Virtual Environment
 
-```bash
-pip install -r requirements.txt
+Windows:
+
+```powershell
+python -m venv .venv
+.\.venv\Scripts\python.exe -m pip install --upgrade pip
+.\.venv\Scripts\python.exe -m pip install -r requirements.txt
 ```
 
-!!! info "Virtual Environment (Recommended)"
-    It's recommended to use a virtual environment to avoid conflicts with other Python packages:
-    
-    ```bash
-    # Create virtual environment
-    python -m venv namemc-sniper-env
-    
-    # Activate virtual environment
-    # On Windows:
-    namemc-sniper-env\Scripts\activate
-    # On macOS/Linux:
-    source namemc-sniper-env/bin/activate
-    
-    # Install dependencies
-    pip install -r requirements.txt
-    ```
-
-### 3. Verify Installation
-
-Test that the installation was successful:
+Linux/macOS:
 
 ```bash
-python Main.py --help
+python3 -m venv .venv
+.venv/bin/python -m pip install --upgrade pip
+.venv/bin/python -m pip install -r requirements.txt
 ```
 
-You should see the help menu with available commands.
-
-### 4. Create Initial Configuration
-
-Generate the default configuration file:
+## Create the Default Config
 
 ```bash
 python Main.py config-create
 ```
 
-This will create a `config.yaml` file in your project directory.
+This creates `config.yaml`. The app also supports sibling files named `tokens.txt` and `proxies.txt` for secrets and proxy lists.
 
-## :gear: Dependencies
+!!! warning "Do Not Commit Secrets"
+    `config.yaml`, `tokens.txt`, `proxies.txt`, and generated proxy files are ignored by the app repository because they can contain credentials.
 
-The main dependencies include:
+## Verify the Install
 
-- **requests** - HTTP library for API calls
-- **pyyaml** - YAML configuration file support
-- **rich** - Beautiful terminal output
-- **discord.py** - Discord bot integration (optional)
-- **schedule** - Task scheduling
-- **colorama** - Cross-platform colored terminal text
-
-## :white_check_mark: Verification
-
-To ensure everything is working correctly:
-
-1. **Check version**:
-   ```bash
-   python Main.py version
-   ```
-
-2. **Validate configuration**:
-   ```bash
-   python Main.py config-validate
-   ```
-
-3. **Test proxy connections** (if using proxies):
-   ```bash
-   python Main.py test-proxies
-   ```
-
-## :exclamation: Troubleshooting Installation
-
-### Common Issues
-
-**Python not found**
 ```bash
-# Make sure Python is in your PATH
-python --version
-# or try
-python3 --version
+python Main.py --version
+python Main.py --help
+python Main.py config-validate
+python Main.py simulate
 ```
 
-**Permission errors**
-```bash
-# On Windows, run as administrator
-# On macOS/Linux, use sudo if needed
-sudo pip install -r requirements.txt
+Expected version:
+
+```text
+NameMCSniper, version 3.0.0
 ```
 
-**Module not found errors**
+## Run Easy Mode
+
 ```bash
-# Ensure you're in the correct directory
-ls -la  # Should show Main.py and requirements.txt
-# Reinstall dependencies
-pip install -r requirements.txt --force-reinstall
+python Main.py easy
 ```
 
-## :arrow_right: Next Steps
+Easy mode asks for the target username, whether to run a safe simulation or a real claim, and when the run should happen.
 
-Once installation is complete, proceed to [Configuration](configuration.md) to set up your sniper settings.
+## Development Checks
+
+For contributors:
+
+```bash
+python -m pip install -r requirements-dev.txt
+python -m pytest
+python -m ruff check .
+```
+
+## Installation Troubleshooting
+
+**`python` is not recognized**
+
+Install Python 3.10+ from python.org or your package manager, then reopen the terminal. On Windows, enable "Add Python to PATH" during installation or use the `py` launcher if available.
+
+**Virtual environment uses the wrong Python**
+
+Delete and recreate `.venv` with a known Python 3.10+ executable.
+
+**Dependencies fail to install**
+
+Upgrade pip first:
+
+```bash
+python -m pip install --upgrade pip
+```
+
+**Config validation asks for live-only values**
+
+Safe dry runs do not require a token. Live claims require valid tokens and, for scheduled runs, an explicit timezone.

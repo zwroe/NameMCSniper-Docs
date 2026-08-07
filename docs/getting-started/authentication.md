@@ -1,189 +1,90 @@
-# Authentication
+﻿# Authentication
 
-Learn how to obtain and use your Minecraft bearer token for secure authentication.
+Bearer tokens are only needed for live claims. Safe simulations and most setup checks do not need a Minecraft account.
 
-## :key: What is a Bearer Token?
+## How v3.0.0 Uses Tokens
 
-A bearer token is a secure authentication method that doesn't require your email and password. It's a temporary access token that grants permission to perform actions on your behalf.
+- Safe simulation is the default and does not use a real token.
+- Live mode requires at least one bearer token.
+- Multiple tokens can be loaded from `tokens.txt`.
+- Tokens are preflighted before the claim window.
+- Invalid or ineligible tokens are disabled for the current run.
+- Tokens are not automatically refreshed; each token must still be valid when the live claim starts.
 
-!!! info "Why Bearer Tokens?"
-    - **More Secure**: No need to store credentials
-    - **Temporary**: Tokens expire, limiting exposure
-    - **Revocable**: Can be invalidated if compromised
+## Recommended Storage
 
-## :computer: Method 1: Browser Developer Tools
+Create `tokens.txt` beside `config.yaml`:
 
-This is the most straightforward method for getting your bearer token.
-
-### Step-by-Step Guide
-
-1. **Open your browser** and navigate to [minecraft.net](https://minecraft.net)
-
-2. **Log in** to your Minecraft account
-
-3. **Open Developer Tools**:
-   - **Chrome/Edge**: Press `F12` or `Ctrl+Shift+I`
-   - **Firefox**: Press `F12` or `Ctrl+Shift+I`
-   - **Safari**: Press `Cmd+Option+I`
-
-4. **Go to the Network tab** in Developer Tools
-
-5. **Make a request** to any Minecraft service (refresh the page or navigate to profile)
-
-6. **Find the Authorization header**:
-   - Look for requests to `api.minecraftservices.com` or similar
-   - Click on a request and look for the `Authorization` header
-   - Copy the value after `Bearer ` (without the "Bearer " prefix)
-
-### Visual Guide
-
-```mermaid
-graph TD
-    A[Open minecraft.net] --> B[Login to account]
-    B --> C[Open Developer Tools F12]
-    C --> D[Go to Network tab]
-    D --> E[Refresh page or navigate]
-    E --> F[Find API request]
-    F --> G[Copy Authorization header]
-    G --> H[Extract token after 'Bearer ']
+```text
+# One Minecraft bearer token per line.
+# Blank lines and comments are ignored.
+first-account-token
+second-account-token
 ```
 
-## :gear: Method 2: Authentication Libraries
+Keep token fields empty in `config.yaml` when using this file:
 
-For more advanced users, you can use Python libraries to authenticate programmatically.
-
-### Using minecraft-launcher-lib
-
-```python
-import minecraft_launcher_lib
-
-# Authenticate with Microsoft account
-login_url, state, code_verifier = minecraft_launcher_lib.microsoft_account.get_secure_login_data()
-print(f"Please open this URL and login: {login_url}")
-
-# After login, get the code from redirect URL
-authorization_code = input("Enter the code from redirect URL: ")
-
-# Get access token
-login_data = minecraft_launcher_lib.microsoft_account.complete_login(
-    authorization_code, 
-    code_verifier, 
-    state
-)
-
-# Extract bearer token
-bearer_token = login_data['access_token']
-print(f"Bearer Token: {bearer_token}")
-```
-
-### Installation
-
-```bash
-pip install minecraft-launcher-lib
-```
-
-## :shield: Security Best Practices
-
-### Token Storage
-
-**❌ Don't do this:**
 ```yaml
-# config.yaml - DON'T hardcode tokens
 snipe:
-  bearer_token: "eyJ0eXAiOiJKV1QiLCJhbGciOiJSUzI1NiJ9..."
+  bearer_token: ""
+  bearer_tokens: []
 ```
 
-**✅ Do this instead:**
-```yaml
-# config.yaml - Use environment variables
-snipe:
-  bearer_token: "${MINECRAFT_BEARER_TOKEN}"
-```
+!!! warning "Token Security"
+    Treat bearer tokens like passwords. Do not paste them in screenshots, Discord, GitHub issues, logs, or committed files.
+
+## Testing Tokens
+
+Validate the primary configured token:
 
 ```bash
-# Set environment variable
-export MINECRAFT_BEARER_TOKEN="your_actual_token_here"
+python Main.py test-token
 ```
 
-### Token Management
-
-- **Rotate regularly**: Get new tokens periodically
-- **Monitor expiration**: Tokens typically expire after 24 hours
-- **Secure storage**: Use environment variables or secure vaults
-- **Never share**: Keep tokens private and secure
-
-## :clock: Token Expiration
-
-Bearer tokens are temporary and will expire. Common expiration times:
-
-- **Microsoft tokens**: 1 hour (with refresh capability)
-- **Minecraft tokens**: 24 hours
-- **Custom implementations**: Varies
-
-### Handling Expiration
-
-```python
-# Check if token is still valid
-def is_token_valid(token):
-    headers = {"Authorization": f"Bearer {token}"}
-    response = requests.get("https://api.minecraftservices.com/minecraft/profile", headers=headers)
-    return response.status_code == 200
-
-# Refresh token if needed
-if not is_token_valid(current_token):
-    current_token = get_new_token()
-```
-
-## :exclamation: Troubleshooting
-
-### Common Issues
-
-**"Invalid bearer token"**
-- Token may have expired
-- Check for extra spaces or characters
-- Ensure you copied the complete token
-
-**"Unauthorized access"**
-- Verify the token is for the correct account
-- Check if the account owns Minecraft
-- Ensure proper permissions
-
-**"Token not found in requests"**
-- Clear browser cache and cookies
-- Try a different browser
-- Ensure you're logged into the correct account
-
-### Validation
-
-Test your token before using it:
+Validate all configured tokens loaded from YAML and `tokens.txt`:
 
 ```bash
-# Test with curl
-curl -H "Authorization: Bearer YOUR_TOKEN" \
-     https://api.minecraftservices.com/minecraft/profile
+python Main.py check-accounts
 ```
 
-Expected response:
-```json
-{
-  "id": "uuid-here",
-  "name": "YourMinecraftUsername"
-}
+## Live Safety Lock
+
+Live claims require deliberate action:
+
+1. Configure a valid token.
+2. Use `--live`.
+3. Set the acknowledgement environment variable exactly.
+
+PowerShell:
+
+```powershell
+$env:NAMEMC_SNIPER_LIVE_ACK='I_UNDERSTAND_THIS_CHANGES_A_REAL_ACCOUNT'
+python Main.py snipe-at -u "TargetName" -w "9/15/2026 â€¢ 6:06:50 PM" --timezone America/New_York --live
 ```
 
-## :warning: Important Notes
+Bash:
 
-!!! danger "Account Security"
-    - Never share your bearer token publicly
-    - Revoke tokens if you suspect they're compromised
-    - Use 2FA on your Microsoft/Minecraft account
+```bash
+NAMEMC_SNIPER_LIVE_ACK=I_UNDERSTAND_THIS_CHANGES_A_REAL_ACCOUNT \
+python Main.py snipe-at -u "TargetName" -w "9/15/2026 â€¢ 6:06:50 PM" --timezone America/New_York --live
+```
 
-!!! info "Legal Compliance"
-    Ensure your use of bearer tokens complies with:
-    - Minecraft Terms of Service
-    - Microsoft Services Agreement
-    - Applicable laws and regulations
+Without both `--live` and the acknowledgement, non-local claim APIs are rejected before an HTTP session is created.
 
-## :arrow_right: Next Steps
+## Troubleshooting
 
-With your bearer token ready, proceed to [Basic Usage](../usage/basic-usage.md) to start using NameMC Sniper.
+**No bearer tokens configured**
+
+Add one token per line to `tokens.txt`, or set `snipe.bearer_token` in local `config.yaml`.
+
+**Token appears to be a placeholder or too short**
+
+Replace placeholder text with a real token. The validator rejects common placeholder values and very short strings.
+
+**Token expired before the drop**
+
+Get a fresh token before the scheduled run. NameMCSniper does not refresh bearer tokens automatically.
+
+**No Minecraft Java profile found**
+
+Use a token from an account that owns Java Edition and has an existing Java profile.
