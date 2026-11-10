@@ -1,110 +1,36 @@
-﻿# Proxy Setup
+# Test a proxy list
 
-NameMCSniper v3.0.0 supports HTTP(S) proxies for advanced commands. Easy mode intentionally uses a direct connection.
+The proxy tester checks whether an HTTP or HTTPS proxy can reach Minecraft Services over HTTPS. Live name changes and account checks use a direct connection.
 
-## When to Use Proxies
+## Create the list
 
-Use proxies only after testing direct latency and stability. Poor proxies can be slower than a clean direct VPS connection and can increase failure rates.
-
-## Supported Formats
+Create a UTF-8 file called `proxies.txt` and add one proxy per line. The app accepts an HTTP or HTTPS URL, a bare `host:port`, or the provider format `host:port@username:password`. Both forms without a scheme use HTTP. Blank lines and lines starting with `#` are ignored.
 
 ```text
-http://host:port
-http://username:password@host:port
-https://host:port
-https://username:password@host:port
+# Replace these example entries with your own
+proxy.example:8080
+https://proxy.example:8443
+http://username:example-password@proxy.example:8080
+proxy.example:8080@username:example-password
 ```
 
-SOCKS proxies are not supported by the current aiohttp transport and are rejected by validation.
+Percent-encode reserved characters in the username or password. For example, write `%40` for an `@` in a password. The list supports up to 256 entries and 64 KiB.
 
-## Recommended Storage
+## Run the check
 
-Set proxy mode in `config.yaml`:
+In the menu, choose **Test proxies**. The default is `proxies.txt` in the current folder if it exists, then `proxies.txt` beside the executable. Press Enter to use the displayed path or enter a path to your list. Choose **1** to save passing entries to `proxies_working.txt` next to the input file. Press Enter or **0** to test without exporting, or enter a different output filename.
 
-```yaml
-proxy:
-  enabled: true
-  proxies: []
-  rotation_enabled: true
-  timeout: 10
-  max_retries: 3
-```
-
-Then create `proxies.txt` beside `config.yaml`:
+From a shell, run one of these commands.
 
 ```text
-# One HTTP(S) proxy per line. Blank lines and comments are ignored.
-http://username:password@proxy1.example.com:8080
-http://username:password@proxy2.example.com:8080
+namemcsniper test-proxies
+namemcsniper test-proxies proxies.txt --output proxies_working.txt
 ```
 
-File proxies are merged with YAML proxies, duplicates are removed, and file-only proxies are not copied into YAML when the app saves config.
+The shell command looks in the current folder when you omit the input filename. Choose a new file for the export. It keeps the original entries, including credentials, so keep the exported list private.
 
-## Validate Proxies
+## Read the results
 
-```bash
-python Main.py check-proxies
-```
+The tester sends an unauthenticated HTTPS profile request through each proxy. The expected `401 Unauthorized` response passes the reachability check. The terminal shows redacted addresses and elapsed time for each result.
 
-Useful options:
-
-```bash
-python Main.py check-proxies --concurrency 100 --output proxies_working.txt
-```
-
-`check-proxies` tests configured proxies against the same service family used for claims and saves working proxies to the output file.
-
-You can also run:
-
-```bash
-python Main.py test-proxies
-```
-
-## Rotation and Health
-
-When `rotation_enabled` is true, the proxy manager chooses healthy proxies in round-robin order.
-
-Proxy health tracking includes:
-
-- Success count
-- Failure count
-- Consecutive failures
-- Response time
-- Automatic disabling after repeated failures
-- Limited recovery checks when no healthy proxy remains
-
-Proxy credentials are redacted in logs.
-
-## Tuning
-
-| Setting | Guidance |
-|---------|----------|
-| `timeout` | Start around `10`; lower only after stable tests |
-| `max_retries` | Controls failures before a proxy is disabled |
-| `rotation_enabled` | Keep enabled for multiple proxies |
-| `concurrent_requests` | Do not raise just because proxies exist |
-
-## Common Problems
-
-**SOCKS proxy rejected**
-
-Use HTTP or HTTPS proxies.
-
-**Proxy list empty but proxy support enabled**
-
-Add proxies to `proxies.txt` or the YAML `proxy.proxies` list.
-
-**Proxy authentication failed**
-
-Check username, password, host, and port. URL-encode special characters in credentials if needed.
-
-**Direct connection is faster**
-
-Use direct mode. Proxies are optional and can hurt timing.
-
-## Security
-
-- Do not commit `proxies.txt`.
-- Do not post proxy URLs with credentials.
-- Use reputable providers.
-- Remove dead proxies regularly.
+To schedule a name change, follow the [menu guide](basic-usage.md).

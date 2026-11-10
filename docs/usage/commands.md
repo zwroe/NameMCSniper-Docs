@@ -1,181 +1,70 @@
-﻿# Command Reference
+# Command reference
 
-Current command reference for NameMCSniper v3.0.0.
+Launch `namemcsniper` with no arguments in a terminal for the guided menu. The examples use the executable name on your PATH. In PowerShell, use `.\namemcsniper.exe` if you are running it from the current folder. [Installation](../getting-started/installation.md).
 
-```bash
-python Main.py [OPTIONS] COMMAND [ARGS]...
-```
+| Command | Behavior |
+| --- | --- |
+| `menu` | Opens the guided menu. |
+| `check [--token-stdin]` | Checks one Minecraft Services bearer token, Java profile, and rename eligibility. Prompts for the token if needed. |
+| `check-tokens [FILE]` | Checks tokens from a file and reports each result by line. With no path, looks for `tokens.txt` in the current folder first, then beside the executable. |
+| `test-proxies [FILE] [--output FILE]` | Tests a proxy list and optionally writes passing entries to a new file. Defaults to `proxies.txt` in the current folder. |
+| `drop NAME [--at TIME] [--until TIME]` | Looks up a three-character name on 3NAME or displays the time or range you entered. |
+| `snipe NAME [OPTIONS]` | Previews a schedule. To go live, add `--live` and specify a profile or token file. |
+| `simulate [--scenario SCENARIO]` | Runs an offline simulation. Scenarios are `success`, `unavailable`, `rate-limited`, `uncertain`, and `rejected`. Defaults to `success`. |
+| `benchmark [--samples N]` | Measures local dispatch delay offline. Supports 1 to 200 samples and defaults to 40. |
+| `clock-check` | Checks UTC against public time sources. |
+| `--help` | Lists commands. Add it after a command to see that command’s options. |
+| `--version` | Prints the version of the executable. |
 
-Global options:
+The Rust CLI also recognizes the aliases `check-accounts` for `check`, `test-tokens` for `check-tokens`, and `snipe-at` for `snipe`.
 
-| Option | Description |
-|--------|-------------|
-| `--version` | Show the CLI version |
-| `--help` | Show help |
-
-## Commands
-
-| Command | Purpose |
-|---------|---------|
-| `benchmark` | Run a timing benchmark to test system precision |
-| `check-accounts` | Validate all configured bearer tokens |
-| `check-proxies` | Check and validate configured proxies |
-| `config-create` | Create a default configuration file |
-| `config-validate` | Validate configuration file |
-| `easy` | Run a beginner-friendly guided simulation or real claim |
-| `simulate` | Run the complete claim worker path without external network access |
-| `snipe` | Run an immediate dry-run claim unless `--live` is unlocked |
-| `snipe-at` | Run a scheduled dry-run claim unless `--live` is unlocked |
-| `snipe-fallback` | Run dry-run fallback windows unless `--live` is unlocked |
-| `test-proxies` | Test proxy connections through the proxy manager |
-| `test-token` | Test the primary configured bearer token |
-| `version` | Show version information |
-
-## `easy`
-
-```bash
-python Main.py easy [--config config.yaml]
-```
-
-Guided flow for simulations and live runs. Easy mode disables proxies and Discord for the run, uses a direct connection, and asks before any live claim.
-
-## `simulate`
-
-```bash
-python Main.py simulate [--config config.yaml] [--username TestName] [--scenario taken_then_success] [--success-after 3]
-```
-
-Runs the worker path without external network access.
-
-Scenarios:
-
-- `success`
-- `taken`
-- `taken_then_success`
-- `rate_limited_then_success`
-- `auth_error`
-- `server_error`
-- `timeout`
-
-Examples:
-
-```bash
-python Main.py simulate
-python Main.py simulate --username "TargetName" --scenario success
-python Main.py simulate --scenario rate_limited_then_success --success-after 4
-```
-
-## `snipe`
-
-```bash
-python Main.py snipe [--config config.yaml] [--username TargetName] [--token TOKEN] [--live]
-```
-
-Runs an immediate claim attempt. Without `--live`, this is a dry run.
-
-Live mode also requires:
+## Look up or preview a time
 
 ```text
-NAMEMC_SNIPER_LIVE_ACK=I_UNDERSTAND_THIS_CHANGES_A_REAL_ACCOUNT
+namemcsniper drop abc
+namemcsniper snipe ExampleName
+namemcsniper snipe ExampleName --at 2030-06-01T18:00:00.250Z
+namemcsniper snipe ExampleName --at 2030-06-01T18:00:00Z --until 2030-06-01T18:00:20Z --attempts 3
 ```
 
-## `snipe-at`
+`drop NAME` looks up 3NAME for names made of exactly three letters, digits, or underscores. A lookup may return a wide range or only a latest time. An offline `snipe NAME` without `--at` previews an example time two seconds in the future. Add `--at` to preview a timestamp you supply.
 
-```bash
-python Main.py snipe-at -u "TargetName" -w "9/15/2026 â€¢ 6:06:50 PM" --timezone America/New_York
-```
+## Schedule a live change
 
-Options:
-
-| Option | Required | Description |
-|--------|----------|-------------|
-| `--username`, `-u` | Yes | Username to claim |
-| `--drop-window`, `-w` | Yes | NameMC time string |
-| `--timezone` | For live scheduled claims | IANA timezone, `UTC`, or offset such as `-04:00` |
-| `--config`, `-c` | No | Config file path |
-| `--live` | No | Unlock real claim mode when acknowledgement is also set |
-
-## `snipe-fallback`
-
-```bash
-python Main.py snipe-fallback \
-  -u "TargetName" \
-  -t "9/15/2026 â€¢ 6:06:50 PM" \
-  -t "9/15/2026 â€¢ 6:07:20 PM" \
-  --timezone America/New_York
-```
-
-Requires at least two `--times` / `-t` values.
-
-## `config-create`
-
-```bash
-python Main.py config-create [--config config.yaml]
-```
-
-Creates a default local configuration file.
-
-## `config-validate`
-
-```bash
-python Main.py config-validate [--config config.yaml]
-```
-
-Validates config schema, live-mode requirements, webhook URL shape, proxy list presence, and timezone requirements.
-
-## `test-token`
-
-```bash
-python Main.py test-token [--config config.yaml]
-```
-
-Checks the primary configured bearer token against the Minecraft profile API.
-
-## `check-accounts`
-
-```bash
-python Main.py check-accounts [--config config.yaml]
-```
-
-Validates all configured tokens from YAML and `tokens.txt`.
-
-## `check-proxies`
-
-```bash
-python Main.py check-proxies [--config config.yaml] [--output proxies_working.txt] [--concurrency 50]
-```
-
-Checks configured HTTP(S) proxies and saves working proxies to the output file.
-
-## `test-proxies`
-
-```bash
-python Main.py test-proxies [--config config.yaml]
-```
-
-Tests proxy connections and prints summary stats.
-
-## `benchmark`
-
-```bash
-python Main.py benchmark [--requests 10] [--config config.yaml]
-```
-
-Measures local timing precision and reports offset and jitter.
-
-## `version`
-
-```bash
-python Main.py version
-```
-
-Shows:
+Run `check` or `check-tokens` first to find your Java UUID and confirm rename eligibility. Replace `UUID`, `FIRST_UUID`, and `SECOND_UUID` in the examples with the UUIDs you select. Use accounts you control. [Authentication](../getting-started/authentication.md).
 
 ```text
-NameMCSniper v3.0.0
-Safe-by-default username claim simulator and client
+namemcsniper snipe ExampleName --at 2030-06-01T18:00:00.250Z --live --account UUID
+namemcsniper snipe ExampleName --at 2030-06-01T18:00:00.250Z --live --tokens-file tokens.txt
+namemcsniper snipe ExampleName --at 2030-06-01T18:00:00.250Z --live --account FIRST_UUID --account SECOND_UUID --tokens-file tokens.txt
 ```
 
-## Removed or Old Commands
+| Flag | Behavior |
+| --- | --- |
+| `--at TIME` | Sets the first time of an exact schedule or the earliest time of a bounded schedule. Use RFC 3339 with `Z` or an explicit offset, or Unix milliseconds. |
+| `--until TIME` | Sets the latest time of a range. Requires `--at`. For scheduling, the range can be at most 30 seconds wide. |
+| `--attempts N` | Defaults to 1. Selecting exactly one profile with `--account` allows up to 3 slots. |
+| `--interval SECONDS` | Sets the minimum spacing between slots. Defaults to 10 seconds and supports 10 to 30. |
+| `--live` | Enables live requests and requires `--account UUID` or `--tokens-file FILE`. |
+| `--account UUID` | Selects a Java profile and requires `--live`. Repeat with `--tokens-file` to select up to 64 distinct profiles. |
+| `--tokens-file FILE` | Loads up to 64 token entries and requires `--live`. Without `--account`, selects every distinct eligible profile and skips profiles that already hold the target name. |
+| `--token-stdin` | Reads a single bearer token from the first line of standard input. Requires `--live` for `snipe` and is mutually exclusive with `--tokens-file`. |
 
-Older documentation referenced menu mode, `generate-token`, `check-username`, `--dry-run`, `--debug`, and Discord bot settings. Those are not part of the current v3.0.0 command surface documented here.
+A single-account run can read the token from a hidden prompt or `NAMEMCSNIPER_TOKEN` when neither token flag is set. A token-file run with no UUIDs or with multiple UUIDs requires the default one slot. The app dispatches one concurrent request per ready profile at that slot.
+
+A live run without `--at` looks up 3NAME for a three-character target and needs a usable window of at most 30 seconds. All absolute live schedules require a verified UTC clock. A bounded schedule with one slot uses the latest time. If you request more slots, the app spaces them within the range and uses fewer when the interval leaves insufficient room. An exact schedule starts at `--at` and spaces later slots by the interval.
+
+With exactly one `--account`, a scheduled retry is possible only after the service confirms the name is unavailable. A rate limit or uncertain result stops further attempts. [Timing and preparation](../advanced/performance.md).
+
+## Exit codes
+
+| Code | Meaning |
+| --- | --- |
+| `0` | Completed successfully. A group can return success when one profile confirmed a name change. |
+| `1` | A command failed. For `check-tokens`, one or more token checks failed. |
+| `2` | Invalid command-line arguments. |
+| `3` | Minecraft Services rate limited a single-account check, a token-list check, or live preflight. This code also applies when rate limiting is the final rename outcome. |
+| `4` | The live name-change outcome was uncertain. Check the run log and profile. |
+| `130` | Live run interrupted with Ctrl+C. If a request was in flight, check the selected profiles before trying again. |
+
+The app displays the `Retry-After` wait when Minecraft Services supplies one. A rate limit during preflight stops the run before dispatch.

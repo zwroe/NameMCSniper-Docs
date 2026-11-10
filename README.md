@@ -1,82 +1,37 @@
 # NameMCSniper Documentation
 
-<img width="1536" height="324" alt="NameMCSniper documentation banner" src="https://github.com/user-attachments/assets/36f6664e-9671-4a6c-a5b0-8b4e03973d2d" />
+This site documents the Rust edition of NameMCSniper. The app uses Cargo. The documentation site uses Python for MkDocs and Material for MkDocs. [Application repository](https://github.com/zwroe/NameMCSniper)
 
-Documentation source for [NameMCSniper](https://github.com/zwroee/NameMCSniper), built with MkDocs and Material for MkDocs.
+## Preview the docs
 
-The docs currently target **NameMCSniper v3.0.0**.
+On Windows, from this folder, run the following in PowerShell.
 
-## Local Preview
-
-```bash
-python -m venv .venv
+```powershell
+py -3 -m venv .venv
 .\.venv\Scripts\python.exe -m pip install -r requirements.txt
 .\.venv\Scripts\python.exe -m mkdocs serve
 ```
 
-Linux/macOS:
+On Linux or macOS, run these commands.
 
-```bash
+```sh
 python3 -m venv .venv
 .venv/bin/python -m pip install -r requirements.txt
 .venv/bin/python -m mkdocs serve
 ```
 
-Open:
+Open [the local preview](http://127.0.0.1:8000/).
 
-```text
-http://127.0.0.1:8000
-```
+## Update and build
 
-## Build
+Edit the Markdown under `docs/` and navigation in `mkdocs.yml`. Check commands and menu options against `src/main.rs` and `src/menu.rs` in the Rust application checkout.
 
-```bash
-python -m mkdocs build
-```
+With the MkDocs environment active, build the site.
 
-Strict build:
-
-```bash
+```sh
 python -m mkdocs build --strict
 ```
 
-## Source Layout
+MkDocs writes generated output to `site/`. This snapshot also includes a rendered copy at the project root. If you refresh that copy, build into a separate directory and copy the generated files into the root. Keep Markdown and configuration as the source of truth.
 
-```text
-docs/
-  index.md
-  getting-started/
-    installation.md
-    configuration.md
-    authentication.md
-  usage/
-    basic-usage.md
-    commands.md
-    discord-setup.md
-    proxy-setup.md
-  advanced/
-    how-it-works.md
-    performance.md
-    troubleshooting.md
-  legal/
-    legal-notice.md
-    support.md
-mkdocs.yml
-requirements.txt
-```
-
-## Updating Content
-
-1. Update Markdown files under `docs/`.
-2. Keep command references aligned with `NameMCSniper/Main.py`.
-3. Keep config examples aligned with `NameMCSniper/config.yaml.example` and `src/config/config.py`.
-4. Run `mkdocs build --strict`.
-5. Commit the source changes.
-
-## Deployment
-
-The GitHub Actions workflow builds the site with MkDocs and deploys the generated `site/` artifact to GitHub Pages.
-
-## Notes
-
-Generated static output may exist in this repository from older builds. The canonical docs source is the Markdown under `docs/` plus `mkdocs.yml`.
+The GitHub Pages workflow builds and deploys `site/` from the documentation repository. [Documentation repository](https://github.com/zwroe/NameMCSniper-Docs)

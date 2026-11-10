@@ -1,42 +1,17 @@
-﻿# Legal Notice
-
-This documentation describes NameMCSniper for educational and testing purposes.
-
-## Disclaimer
+# Legal Notice
 
 NameMCSniper is provided as-is. The authors and contributors are not responsible for account changes, rate limits, service restrictions, lost names, or other consequences from using the software.
 
-## User Responsibility
+## Live account changes
 
-You are responsible for:
+Use live functionality only on profiles you are authorized to rename. Follow the applicable Minecraft, Microsoft, and network provider terms and respect service rate limits.
 
-- Understanding what each command does before running it.
-- Keeping bearer tokens, webhook URLs, and proxy credentials private.
-- Respecting Minecraft, Microsoft, Discord, proxy provider, hosting provider, and network terms.
-- Avoiding abusive request patterns.
-- Using live functionality only where permitted.
-
-## Safe Defaults
-
-Version 3.0.0 defaults to safe local simulation. Live claims require deliberate unlocking with `--live` and an acknowledgement environment variable.
-
-These safety controls reduce accidental account changes, but they do not replace your responsibility to use the tool appropriately.
+The guided menu displays the profiles, target, and time before asking you to type `RENAME`. A scripted live run requires `--live` and an explicit profile or token file. [Live workflow](../usage/basic-usage.md)
 
 ## Credentials
 
-Bearer tokens can authorize account actions. Treat them like passwords.
-
-Do not:
-
-- Commit tokens to Git.
-- Paste tokens into support channels.
-- Share screenshots that show full tokens.
-- Store tokens in public logs or public issue reports.
-
-## Proxies and Webhooks
-
-Proxy credentials and Discord webhook URLs are also sensitive. Redact them before sharing config or logs.
+Treat bearer tokens like passwords. Keep token lists and authenticated proxy files private, including any working proxy list you export. Redact credentials before sharing logs, command output, or screenshots.
 
 ## License
 
-NameMCSniper is distributed under the MIT License. See the project repository for the full license text.
+NameMCSniper is distributed under the MIT License. [License text](https://github.com/zwroe/NameMCSniper/blob/main/LICENSE)

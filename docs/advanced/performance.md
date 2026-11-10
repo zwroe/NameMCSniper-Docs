@@ -1,118 +1,25 @@
-﻿# Performance Optimization
+# Sniping tips
 
-Performance tuning should start with measurement, not maximum settings. In v3.0.0, safe simulation and benchmarks let you test locally before any live run.
+## Choose a time you can verify
 
-## Start With These Checks
+Start with **1 · Schedule a name change**. For a three-character name, the menu shows any future bounds from 3NAME. You can inspect the same estimate with `namemcsniper drop NAME`. Look at both timestamps and how far apart they are. The name may still be unavailable at the earliest bound, and another player may claim it before the latest bound. If the bounds are hours apart, check for an updated estimate closer to the drop or use a time you have independently verified. [3NAME](https://3name.xyz/) · [MCsniperGO's notes on drop windows](https://github.com/Kqzz/MCsniperGO#claim-range)
 
-```bash
-python Main.py simulate
-python Main.py benchmark
-python Main.py config-validate
-python Main.py check-accounts
-```
+The automatic command-line schedule accepts a 3NAME window up to 30 seconds wide. The same limit applies to a manual range made with `--at` and `--until`. A single attempt over an accepted range is scheduled for its latest bound. In the menu, you can select an individual future bound or enter a time with an explicit UTC offset. Review the UTC time in the preview before continuing. [Schedule options](../usage/basic-usage.md)
 
-If proxy mode is enabled:
+## Check the clock and account early
 
-```bash
-python Main.py check-proxies
-```
+1. On Windows, open **Settings > Time & language > Date & time** and turn on **Set time automatically**. Choose **6 · Check UTC clock** in NameMCSniper and check that the sources agree. Read the estimated UTC uncertainty alongside the offset. [Microsoft's Windows time settings guide](https://support.microsoft.com/en-us/windows/experience/personalization/set-time-date-and-time-zone-settings-in-windows)
+2. Use **2 · Check my Minecraft account** or **7 · Test bearer tokens (tokens.txt)** to confirm the Java profile UUID and rename eligibility. For a future run, NameMCSniper checks eligibility again shortly before dispatch. Minecraft allows one Java profile name change every 30 days. [Authentication](../getting-started/authentication.md) · [Minecraft Help](https://help.minecraft.net/hc/en-us/articles/4408950195341-View-or-Change-Your-In-Game-Profile-Name-in-Minecraft)
+3. Use a stable connection and keep the machine awake until the outcome appears. If the clock check fails, resolve it while there is still time to preview the schedule again. [Clock troubleshooting](troubleshooting.md#clock-checks)
 
-## Important Settings
+## Read the timing numbers
 
-```yaml
-snipe:
-  start_sniping_at_seconds: 0.4
-  snipe_window_seconds: 10.1
-  max_snipe_attempts: 3000
-  request_delay_ms: 8
-  concurrent_requests: 40
-  max_backoff_seconds: 5
-  adaptive_delays: true
-  per_token_rate_limiting: true
+Choose **5 · Measure dispatch timing** or run `namemcsniper benchmark --samples 100`. It runs the scheduler offline against scripted responses and reports the median, 95th percentile, and worst dispatch delay, plus missed slots. Run it on the machine you plan to use under its usual load.
 
-performance:
-  gc_disable: true
-  high_priority: true
-  pre_warm_connections: true
-  busy_wait_ms: 50
-```
+| Measurement | What it measures |
+| --- | --- |
+| Benchmark dispatch delay | How late the local scheduler starts a scripted request relative to its slot. |
+| UTC offset and estimated uncertainty | How far the system clock appears to be from UTC and how uncertain the app's correction is. |
+| Clock check round trip | The round trip to a public NTP server. The elapsed time reported for a live attempt covers work with Minecraft Services, including any follow-up profile check. |
 
-## Concurrency
-
-`concurrent_requests` controls worker count. More workers are not always better:
-
-- They share one global attempt budget.
-- Too many workers can trigger rate limits.
-- More valid tokens usually helps more than forcing one token harder.
-- Bad proxies can erase any concurrency advantage.
-
-Increase concurrency gradually and compare results with `simulate`, `benchmark`, and live-safe checks.
-
-## Request Delay
-
-`request_delay_ms` controls per-worker pacing. Low values are more aggressive. Keep `adaptive_delays` enabled so rate-limit responses can slow workers when needed.
-
-## Attempt Budget
-
-`max_snipe_attempts` is global across all workers and tokens. For example, 40 workers do not each get 3000 attempts; they share the budget.
-
-## Clock Behavior
-
-Scheduled runs refresh clock offset every 30 minutes while waiting. If NTP and HTTPS time fallbacks fail, NameMCSniper continues with the local system clock.
-
-For live timing:
-
-- Keep the machine clock correct.
-- Avoid suspending the computer during long waits.
-- Prefer stable machines for long schedules.
-- Run `benchmark` on the machine you plan to use.
-
-## Long Schedules
-
-For drops hours or days away:
-
-- Progress logs appear every five minutes.
-- The final hour logs every minute.
-- The final minute logs every second.
-- Token checks and connection preparation happen near the claim window, not hours early.
-
-## Proxies
-
-Only use proxies that are stable and low latency.
-
-```bash
-python Main.py check-proxies --concurrency 50
-```
-
-Good proxy practice:
-
-- Use HTTP(S), not SOCKS.
-- Remove slow or dead proxies.
-- Do not assume proxies beat a clean direct VPS route.
-- Keep credentials private.
-
-## Discord
-
-Discord webhooks are intentionally outside the precision timer. Rate limits or webhook failures should not block the critical claim path.
-
-## VPS Notes
-
-A VPS is not required for correctness testing. It can help with uptime, routing, and stable clocks, but you should still measure:
-
-```bash
-python Main.py benchmark
-python Main.py simulate
-python Main.py check-accounts
-```
-
-## Risk Balance
-
-Aggressive settings can increase rate limits or failures. Tune in small steps and keep a record of:
-
-- Worker count
-- Delay
-- Attempt budget
-- Proxy use
-- Token count
-- Benchmark jitter
-- Network route
+An offline benchmark cannot tell you when Minecraft will process a request or when the name will actually drop. Start with the default single attempt and stop if Minecraft returns HTTP 429. Follow `Retry-After` when the response provides it. MCsniperGO's maintainers reported that rate limits made automated claims ineffective in their testing. [MCsniperGO maintainer notice](https://github.com/Kqzz/MCsniperGO#readme)

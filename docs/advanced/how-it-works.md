@@ -1,130 +1,31 @@
-﻿# How It Works
+# How It Works
 
-NameMCSniper v3.0.0 is built around a safety-first flow: simulations are local by default, and live claims require explicit unlocking.
+NameMCSniper schedules a rename on an existing Minecraft Java Edition profile. The menu lets you review a schedule before choosing an account. A guided live run requires you to type `RENAME` after reviewing the name, time, and selected profiles. From a shell, `snipe --live` requires a profile UUID or a token file. `simulate` and `benchmark` use scripted responses offline. [Command reference](../usage/commands.md)
 
-## Safety Model
+## Resolve the scheduled time
 
-By default, commands run in dry-run mode. In dry-run mode the program does not contact:
+For a three-character username, NameMCSniper can look up the bounds published by 3NAME. A “Dropping Now” listing can have only a latest bound. The menu offers each future bound as a separate choice. Manual times use RFC 3339 with an explicit offset or Unix milliseconds. The two-minute shortcut counts elapsed time from when you select it. Its displayed UTC time uses the system clock at selection. [3NAME](https://3name.xyz/) · [Schedule options](../usage/basic-usage.md)
 
-- Minecraft claim APIs
-- Discord webhooks
-- Proxies
-- NTP servers
-- Public HTTPS time APIs
+## Verify UTC and wait
 
-Live claims require:
+For an absolute live schedule, NameMCSniper queries Cloudflare, Windows Time, and NIST in parallel using NTP. It requires at least two accepted sources whose offsets agree within 50 ms. The app applies the correction to its own UTC estimate and uses a monotonic clock to track elapsed time toward the scheduled slot. Corrections are capped at five minutes. [NTP offset and filtering](https://www.rfc-editor.org/rfc/rfc5905.html#section-8)
 
-1. `snipe.dry_run: false` for the runtime config.
-2. The `--live` command flag.
-3. `NAMEMC_SNIPER_LIVE_ACK=I_UNDERSTAND_THIS_CHANGES_A_REAL_ACCOUNT`.
+During a long wait before the account check, the app refreshes the correction roughly every two minutes. It also checks again if it detects a clock jump or the countdown wakes unexpectedly late. After a transient refresh failure, it can continue with the last verified correction while the oldest selected sample is under ten minutes old and estimated uncertainty stays at or below 350 ms. If UTC verification fails outside those limits, the absolute schedule stops. [Clock troubleshooting](troubleshooting.md#clock-checks)
 
-Without the live flag and acknowledgement, non-local claim APIs are rejected before an HTTP session is created.
+## Verify the profiles and prepare the request
 
-## Main Phases
+The app checks that each token belongs to the selected Java profile UUID and that the profile can rename. It schedules these checks 20 seconds before the first slot for one to four profiles and starts earlier for larger groups, up to 2 minutes 45 seconds before the slot for 64 profiles. The budget covers two phases of up to four concurrent reads, a five-second timeout per read, and five seconds of margin. If less time remains, checks start as soon as possible.
 
-### 1. Configuration Load
+The app prepares the rename request ahead of dispatch and reuses the HTTP client from the account checks. In group mode, it can skip an ineligible profile if another remains. Preflight aborts on HTTP 429 or a profile UUID mismatch. [Authentication](../getting-started/authentication.md)
 
-The app loads `config.yaml`, then reads sibling files:
+## Dispatch the rename
 
-- `tokens.txt` for bearer tokens
-- `proxies.txt` for HTTP(S) proxies when proxy mode is enabled
+The only write is `PUT /minecraft/profile/name/{name}` to Minecraft Services. The guided menu schedules one slot. A script with exactly one `--account` UUID can schedule up to three slots, at least 10 seconds apart. Only a confirmed unavailable result advances to a later slot. Each slot has one second of scheduling grace before the app skips it. A group run uses one slot and sends one concurrent request per ready profile. The token file can contain up to 64 entries. [MCsniperGO's rename request](https://github.com/Kqzz/MCsniperGO/blob/abba9c2f3c16cfdae9c0ee83d0dff3c87769239a/pkg/mc/account.go#L269) · [Command reference](../usage/commands.md)
 
-It merges values, removes duplicates, validates schema keys, and rejects obsolete or misspelled config options.
+NameMCSniper confirms a rename when the response identifies both the target name and the authorized profile UUID. If a reply leaves the outcome unclear, the app can read the profile back once to verify the result. HTTP 429 ends the schedule after any requests already in progress, and a rate-limited batch skips follow-up profile reads. If the outcome is still uncertain or you cancel during the request, check the selected profile before sending another rename. [Live outcome troubleshooting](troubleshooting.md#live-outcomes)
 
-### 2. Validation
+## Inspect the results
 
-Validation depends on mode:
+The terminal displays the outcome for each attempt and, in a group run, for each profile. The live run prints its log path. The log records the schedule, clock checks, dispatch times, and results. It excludes bearer tokens and proxy credentials. The default directory on Windows is `%LOCALAPPDATA%\NameMCSniper\logs`. [Log locations](troubleshooting.md#logs)
 
-- Dry runs can run without tokens.
-- Live claims require at least one valid-looking token.
-- Scheduled live claims require an explicit timezone.
-- Discord live notifications require a valid HTTPS Discord webhook URL.
-- Proxy mode requires at least one configured proxy.
-
-### 3. Time Parsing
-
-Scheduled commands accept copied NameMC drop windows:
-
-```text
-9/15/2026 â€¢ 6:06:50 PM
-```
-
-The parser supports:
-
-- Regular colons
-- The older mathematical-colon variant
-- IANA timezones such as `America/New_York`
-- `UTC`
-- Offsets such as `-04:00`
-
-Ambiguous or nonexistent daylight-saving times are rejected when an IANA timezone is used.
-
-### 4. Long Wait
-
-For scheduled runs, the app calculates the claim start time from:
-
-```text
-drop_time - start_sniping_at_seconds
-```
-
-Long waits show progress:
-
-- Every five minutes during long waits
-- Every minute during the final hour
-- Every second during the final minute
-
-Clock offset is refreshed every 30 minutes while waiting. If external clock sources are unavailable, the run continues using the local system clock.
-
-### 5. Final Preparation
-
-Live-only preparation is deferred until shortly before the claim window:
-
-- Token validation
-- Final clock sync
-- Connection pre-warming
-- Process-priority setup
-- Garbage-collector changes
-
-Process-priority failures are warnings, not fatal errors.
-
-### 6. Claim Window
-
-Workers run concurrently until one of these happens:
-
-- A claim succeeds
-- The global attempt budget is exhausted
-- The claim window ends
-- The run is interrupted
-
-`max_snipe_attempts` is a global budget shared by all workers, not a per-worker limit.
-
-### 7. Results and Cleanup
-
-The app reports a mode-aware result:
-
-- Simulation messages cannot be confused with real claims.
-- Live success messages only appear after a real accepted response.
-- HTTP sessions and other resources are cleaned up after each run.
-
-## Accounts
-
-All configured tokens are preflighted. Invalid or ineligible tokens are disabled for the current claim window. Multiple valid tokens are distributed across workers.
-
-!!! warning "Token Lifetime"
-    Bearer tokens are not automatically refreshed. Tokens must still be valid when the live claim window begins.
-
-## Proxies
-
-Proxies are optional and only support HTTP(S). The proxy manager tracks health, disables failing proxies, rotates healthy proxies, and redacts proxy credentials in logs.
-
-Easy mode disables proxies for the run.
-
-## Discord
-
-Discord notifications use webhooks only. They run outside the precision timer with bounded timeouts. Rate-limited notifications are skipped rather than blocking the claim path.
-
-Easy mode disables Discord for the run.
-
-## Local Integration Testing
-
-The test suite uses a loopback fake Minecraft API to exercise request serialization, headers, response handling, connection pooling, and cleanup without reaching Minecraft.
+The proxy checker makes a separate, unauthenticated HTTPS request through each proxy. Live renames use a direct connection to Minecraft Services. [Proxy setup](../usage/proxy-setup.md)

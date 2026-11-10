@@ -1,88 +1,28 @@
-﻿# NameMCSniper
+# NameMCSniper
 
 ![NameMCSniper banner](namemcsniperbanner.png)
 
-NameMCSniper is a safe-by-default Python CLI for simulating timed Minecraft username claim workflows and, only when deliberately unlocked, issuing live username-change requests.
+NameMCSniper schedules Minecraft Java Edition profile name changes. The Rust build opens a guided terminal menu for checking accounts, previewing a schedule, and confirming a live rename.
 
-The current documented release is **v3.0.0**. The default mode is local simulation: it does not contact Minecraft, Discord, proxies, NTP, or internet time services, and it cannot change an account.
+## Start here
 
-![NameMCSniper](https://img.shields.io/badge/NameMCSniper-green?style=for-the-badge)
-![Python](https://img.shields.io/badge/Python-3.10+-blue?style=for-the-badge&logo=python)
-![License](https://img.shields.io/badge/License-MIT-yellow?style=for-the-badge)
+1. Open the Rust executable. On Windows, double-click `namemcsniper.exe`. [Installation](getting-started/installation.md)
+2. Choose **3 · Try an offline simulation** to see how a result looks.
+3. Choose **2 · Check my Minecraft account** for one bearer token, or **7 · Test bearer tokens (tokens.txt)** for a file. [Authentication](getting-started/authentication.md)
+4. Choose **1 · Schedule a name change**. Enter the target, pick a time, and review the account and schedule before you confirm. [Schedule a rename](usage/basic-usage.md)
 
-## Current Highlights
+For three-character names, the menu can pull the estimated release window from 3NAME. You can also enter a specific time. [Sniping tips](advanced/performance.md)
 
-- **Safe simulation by default** - Test the worker, timing, rate-limit, and result paths without a Minecraft account or public network calls.
-- **Easy CLI workflow** - Run `python Main.py easy` and answer guided prompts.
-- **Explicit live safety lock** - Live claims require `--live` and a separate acknowledgement environment variable.
-- **Scheduled NameMC timing** - Use copied NameMC drop times with explicit timezones.
-- **Multiple account support** - Load one bearer token per line from `tokens.txt`.
-- **Proxy file support** - Load HTTP(S) proxies from `proxies.txt` when proxy mode is enabled.
-- **Discord webhooks** - Optional webhook notifications outside the precision timing path.
-- **Local integration testing** - Fake Minecraft API support keeps verification offline and repeatable.
+## Why I switched from Python to Rust
 
-## Quick Start
+I wanted NameMCSniper to open from Explorer and give me more control over when a rename request leaves the app. The Rust build produces a native executable. I moved request preparation ahead of the drop and used a monotonic timer for the final wait. The app rechecks UTC if it detects a change to the system clock.
 
-```bash
-git clone https://github.com/zwroee/NameMCSniper.git
-cd NameMCSniper
-python -m venv .venv
-```
+The rewrite also checks rename eligibility before dispatch, keeps a verified UTC correction through brief outages, and reports results for each account in a group. The offline benchmark measures local dispatch delay. The drop estimate, network path, and Minecraft's response determine what happens after that. [How it works](advanced/how-it-works.md)
 
-Windows:
+## Using these docs
 
-```powershell
-.\.venv\Scripts\python.exe -m pip install -r requirements.txt
-.\.venv\Scripts\python.exe Main.py config-create
-.\.venv\Scripts\python.exe Main.py easy
-```
+These pages cover the Rust checkout and its builds. The public GitHub release still contains the Python edition. [Python v3.0.0 release](https://github.com/zwroe/NameMCSniper/releases/tag/v3.0.0)
 
-Linux/macOS:
-
-```bash
-.venv/bin/python -m pip install -r requirements.txt
-.venv/bin/python Main.py config-create
-.venv/bin/python Main.py easy
-```
-
-## Common Commands
-
-| Command | Purpose |
-|---------|---------|
-| `python Main.py easy` | Guided simulation or live run |
-| `python Main.py simulate` | Immediate offline simulation |
-| `python Main.py snipe-at -u "TargetName" -w "9/15/2026 â€¢ 6:06:50 PM" --timezone America/New_York` | Scheduled dry run |
-| `python Main.py config-validate` | Validate configuration |
-| `python Main.py check-accounts` | Validate configured bearer tokens |
-| `python Main.py check-proxies` | Validate configured proxies |
-| `python Main.py benchmark` | Measure local timing precision |
-
-## Documentation Sections
-
-### Getting Started
-
-- [Installation](getting-started/installation.md) - Set up the project and Python environment
-- [Configuration](getting-started/configuration.md) - Understand `config.yaml`, `tokens.txt`, and `proxies.txt`
-- [Authentication](getting-started/authentication.md) - Store bearer tokens safely
-
-### Usage
-
-- [Basic Usage](usage/basic-usage.md) - Run simulations, easy mode, and scheduled dry runs
-- [Command Reference](usage/commands.md) - Current v3.0.0 command list
-- [Discord Setup](usage/discord-setup.md) - Configure optional webhook notifications
-- [Proxy Setup](usage/proxy-setup.md) - Configure HTTP(S) proxy loading and checks
-
-### Advanced
-
-- [How It Works](advanced/how-it-works.md) - Safety model, scheduling, and claim flow
-- [Performance Optimization](advanced/performance.md) - Timing, worker, proxy, and clock notes
-- [Troubleshooting](advanced/troubleshooting.md) - Common setup and runtime issues
-
-## Important Notice
-
-!!! warning "Use Responsibly"
-    Live functionality can change a real Minecraft account username. Use it only where permitted, respect service limits and account restrictions, and keep tokens, webhooks, and proxies private.
-
-## Support
-
-Need help? Start with the [Troubleshooting](advanced/troubleshooting.md) guide, then use the support channels listed on the [Support](legal/support.md) page.
+- [Local files and settings](getting-started/configuration.md) covers `tokens.txt`, `proxies.txt`, and run logs.
+- [Command reference](usage/commands.md) covers the terminal commands and flags.
+- [Troubleshooting](advanced/troubleshooting.md) covers missed times, token errors, and rate limits.
